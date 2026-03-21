@@ -23,8 +23,8 @@ log = logging.getLogger("roblox-linker")
 
 LINKED_ACCOUNTS_FILE = "linked_accounts.json"
 CONFIG_FILE = "config.json"
-ADMIN_ROLE_NAME = "🔨Mod"
-OWNER_ID = 1322627642746339432
+ADMIN_ROLE_NAMES = ["T Mod", "Head Mod", "Owner"]
+OWNER_ID = 906812064851451915
 ROBLOX_USER_URL = "https://users.roblox.com/v1/usernames/users"
 ROBLOX_GAMEPASS_URL = "https://inventory.roblox.com/v1/users/{user_id}/items/GamePass/{gamepass_id}"
 ROBLOX_PROFILE_URL = "https://www.roblox.com/users/{user_id}/profile"
@@ -72,8 +72,15 @@ def save_accounts():
 def is_admin(interaction: discord.Interaction) -> bool:
     if interaction.user.id == OWNER_ID:
         return True
-    role = discord.utils.get(interaction.guild.roles, name=ADMIN_ROLE_NAME)
-    return role is not None and role in interaction.user.roles
+    member_role_names = {r.name for r in interaction.user.roles}
+    return bool(member_role_names & set(ADMIN_ROLE_NAMES))
+
+def admin_only():
+    async def predicate(interaction: discord.Interaction) -> bool:
+        if is_admin(interaction):
+            return True
+        raise app_commands.CheckFailure("You don't have an admin role.")
+    return app_commands.check(predicate)
 
 def get_cached(key: str):
     entry = roblox_cache.get(key)
@@ -394,7 +401,7 @@ async def lookup_roblox(interaction: discord.Interaction, username: str):
     await interaction.followup.send(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="list-linked", description="(Admin) List all linked accounts.")
-@app_commands.checks.has_role(ADMIN_ROLE_NAME)
+@admin_only()
 async def list_linked(interaction: discord.Interaction):
     await interaction.response.defer(ephemeral=True)
     if not is_admin(interaction):
@@ -425,7 +432,7 @@ async def list_linked(interaction: discord.Interaction):
 
 @bot.tree.command(name="force-link", description="(Admin) Force link a Discord user to a Roblox username.")
 @app_commands.describe(discord_user="The Discord user to link", roblox_username="Their Roblox username")
-@app_commands.checks.has_role(ADMIN_ROLE_NAME)
+@admin_only()
 async def force_link(interaction: discord.Interaction, discord_user: discord.User, roblox_username: str):
     await interaction.response.defer(ephemeral=True)
     if not is_admin(interaction):
@@ -459,7 +466,7 @@ async def force_link(interaction: discord.Interaction, discord_user: discord.Use
 
 @bot.tree.command(name="admin-unlink", description="(Admin) Unlink a Discord user's Roblox account.")
 @app_commands.describe(discord_user="The Discord user to unlink")
-@app_commands.checks.has_role(ADMIN_ROLE_NAME)
+@admin_only()
 async def admin_unlink(interaction: discord.Interaction, discord_user: discord.User):
     await interaction.response.defer(ephemeral=True)
     if not is_admin(interaction):
@@ -488,7 +495,7 @@ async def admin_unlink(interaction: discord.Interaction, discord_user: discord.U
     await interaction.followup.send(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="clear-cache", description="(Admin) Clear the Roblox API cache.")
-@app_commands.checks.has_role(ADMIN_ROLE_NAME)
+@admin_only()
 async def clear_cache(interaction: discord.Interaction):
     if not is_admin(interaction):
         await interaction.response.send_message(embed=make_embed("No Permission", "", discord.Color.red()), ephemeral=True)
@@ -499,7 +506,7 @@ async def clear_cache(interaction: discord.Interaction):
     await interaction.response.send_message(embed=embed, ephemeral=True)
 
 @bot.tree.command(name="stats", description="(Admin) View bot statistics.")
-@app_commands.checks.has_role(ADMIN_ROLE_NAME)
+@admin_only()
 async def stats(interaction: discord.Interaction):
     if not is_admin(interaction):
         await interaction.response.send_message(embed=make_embed("No Permission", "", discord.Color.red()), ephemeral=True)
