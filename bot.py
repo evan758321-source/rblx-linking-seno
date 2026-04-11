@@ -23,7 +23,7 @@ log = logging.getLogger("roblox-linker")
 
 LINKED_ACCOUNTS_FILE = "linked_accounts.json"
 CONFIG_FILE = "config.json"
-ADMIN_ROLE_NAMES = ["T Mod", "Head Mod", "Owner"]
+ADMIN_ROLE_NAMES = ["TRIAL MOD", "HEAD MOD", "OWNER"]
 OWNER_ID = 906812064851451915
 ROBLOX_USER_URL = "https://users.roblox.com/v1/usernames/users"
 ROBLOX_GAMEPASS_URL = "https://inventory.roblox.com/v1/users/{user_id}/items/GamePass/{gamepass_id}"
